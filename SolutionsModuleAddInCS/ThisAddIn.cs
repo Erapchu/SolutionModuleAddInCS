@@ -2,38 +2,71 @@
 using System.Diagnostics;
 using Outlook = Microsoft.Office.Interop.Outlook;
 using Office = Microsoft.Office.Core;
-
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace SolutionsModuleAddInCS
 {
     public partial class ThisAddIn
     {
         Outlook.SolutionsModule solutionsModule;
+        Outlook.Explorer explorer;
+        Outlook.Folder switchedFolder;
+        string solutionEntryId;
+        private Microsoft.Office.Tools.CustomTaskPane myCustomTaskPane;
+        private MyUserControl myUserControl1;
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
+            myUserControl1 = new MyUserControl();
+            myCustomTaskPane = this.CustomTaskPanes.Add(myUserControl1, "My Task Pane");
+            myCustomTaskPane.Visible = !myCustomTaskPane.Visible;
+
+            explorer = Application.ActiveExplorer();
+            explorer.BeforeFolderSwitch += Explorer_BeforeFolderSwitch;
+            explorer.FolderSwitch += Explorer_FolderSwitch;
+
             //Call EnsureSolutionsModule to ensure that
             //Solutions module and custom folder icons
             //appear in Outlook Navigation Pane
             EnsureSolutionsModule();
         }
 
+        private void Explorer_FolderSwitch()
+        {
+            /*if (switchedFolder != null)
+            {
+                Outlook.MailItem newMailItem = Application.CreateItem(Outlook.OlItemType.olMailItem);
+                newMailItem.Body = "Hello fvckbldfbv dsf";
+                newMailItem.Recipients.Add("Outlook");
+                newMailItem.Subject = "Following";
+                switchedFolder.Items.Add(newMailItem);
+            }*/
+        }
+
+        private void Explorer_BeforeFolderSwitch(object NewFolder, ref bool Cancel)
+        {
+            switchedFolder = NewFolder as Outlook.Folder;
+            if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId)
+            {
+                System.Windows.Forms.MessageBox.Show($"You switch this folder: {switchedFolder.Name}");
+            }
+                
+        }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
         {
             //If needed, your cleanup code goes here
         }
 
-
         private void EnsureSolutionsModule()
         {
             try
             {
                 //Declarations
+                List<Outlook.Folder> subFoldersList = new List<Outlook.Folder>();
                 Outlook.Folder solutionRoot;
-                Outlook.Folder solutionCalendar;
-                Outlook.Folder solutionContacts;
-                Outlook.Folder solutionTasks;
-                bool firstRun = false ;
+                bool firstRun = false;
                 Outlook.Folder rootStoreFolder =
                     Application.Session.DefaultStore.GetRootFolder()
                     as Outlook.Folder;
@@ -43,7 +76,7 @@ namespace SolutionsModuleAddInCS
                 try
                 {
                     solutionRoot =
-                        rootStoreFolder.Folders["Solution Demo"]
+                        rootStoreFolder.Folders["All locations (test)"]
                         as Outlook.Folder;
                 }
                 catch
@@ -54,67 +87,47 @@ namespace SolutionsModuleAddInCS
                 if (firstRun == true)
                 {
                     solutionRoot =
-                        rootStoreFolder.Folders.Add("Solution Demo",
-                        Outlook.OlDefaultFolders.olFolderInbox) 
+                        rootStoreFolder.Folders.Add("All locations (test)",
+                        Outlook.OlDefaultFolders.olFolderInbox)
                         as Outlook.Folder;
-                    solutionCalendar = solutionRoot.Folders.Add(
-                        "Solution Calendar", 
-                        Outlook.OlDefaultFolders.olFolderCalendar)
-                        as Outlook.Folder;
-                    solutionContacts = solutionRoot.Folders.Add(
-                        "Solution Contacts", 
-                        Outlook.OlDefaultFolders.olFolderContacts)
-                        as Outlook.Folder;
-                    solutionTasks = solutionRoot.Folders.Add(
-                        "Solution Tasks", 
-                        Outlook.OlDefaultFolders.olFolderTasks)
-                        as Outlook.Folder;
+
+                    for (int i = 0; i < 10; i++)
+                    {
+                        subFoldersList.Add(solutionRoot.Folders.Add(
+                        $"Location {i}",
+                        Outlook.OlDefaultFolders.olFolderInbox)
+                        as Outlook.Folder);
+                    }
                 }
                 else
                 {
                     solutionRoot =
-                        rootStoreFolder.Folders["Solution Demo"]
+                        rootStoreFolder.Folders["All locations (test)"]
                         as Outlook.Folder;
-                    solutionCalendar = solutionRoot.Folders[
-                        "Solution Calendar"]
-                        as Outlook.Folder;
-                    solutionContacts = solutionRoot.Folders[
-                        "Solution Contacts"]
-                        as Outlook.Folder;
-                    solutionTasks = solutionRoot.Folders[
-                        "Solution Tasks"]
-                        as Outlook.Folder;
-                } 
+                    for (int i = 0; i < 10; i++)
+                    {
+                        subFoldersList.Add(solutionRoot.Folders[$"Location {i}"] as Outlook.Folder);
+                    }
+                }
+
+                solutionEntryId = solutionRoot.EntryID;
+
                 //Get the icons for the solution
-                stdole.StdPicture rootPict = 
+                stdole.StdPicture rootPict =
                     PictureDispConverter.ToIPictureDisp(
-                    Properties.Resources.BRIDGE)
-                    as stdole.StdPicture;
-                stdole.StdPicture calPict = 
-                    PictureDispConverter.ToIPictureDisp(
-                    Properties.Resources.umbrella)
-                    as stdole.StdPicture;
-                stdole.StdPicture contactsPict = 
-                    PictureDispConverter.ToIPictureDisp(
-                    Properties.Resources.group)
-                    as stdole.StdPicture;
-                stdole.StdPicture tasksPict = 
-                    PictureDispConverter.ToIPictureDisp(
-                    Properties.Resources.SUN)
+                    Properties.Resources.folder)
                     as stdole.StdPicture;
                 //Set the icons for solution folders
                 solutionRoot.SetCustomIcon(rootPict);
-                solutionCalendar.SetCustomIcon(calPict);
-                solutionContacts.SetCustomIcon(contactsPict);
-                solutionTasks.SetCustomIcon(tasksPict);
+                subFoldersList.ForEach(f => f.SetCustomIcon(rootPict));
+
                 //Obtain a reference to the SolutionsModule
-                Outlook.Explorer explorer = Application.ActiveExplorer();
                 solutionsModule =
                     explorer.NavigationPane.Modules.GetNavigationModule(
                     Outlook.OlNavigationModuleType.olModuleSolutions)
                     as Outlook.SolutionsModule;
                 //Add the solution and hide folders in default modules
-                solutionsModule.AddSolution(solutionRoot, 
+                solutionsModule.AddSolution(solutionRoot,
                     Outlook.OlSolutionScope.olHideInDefaultModules);
                 //The following code sets the position and visibility
                 //of the SolutionsModule
@@ -152,7 +165,7 @@ namespace SolutionsModuleAddInCS
             this.Startup += new System.EventHandler(ThisAddIn_Startup);
             this.Shutdown += new System.EventHandler(ThisAddIn_Shutdown);
         }
-        
+
         #endregion
     }
 }
