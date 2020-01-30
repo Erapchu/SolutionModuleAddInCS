@@ -30,6 +30,10 @@ namespace SolutionsModuleAddInCS
             //inspector.NewFormRegion();
 
             //explorer.ShowPane(Outlook.OlPane.olFolderList, false);
+            //explorer.ShowPane(Outlook.OlPane.olNavigationPane, false);
+            //explorer.ShowPane(Outlook.OlPane.olOutlookBar, false);
+            //explorer.ShowPane(Outlook.OlPane.olPreview, false);
+            //explorer.ShowPane(Outlook.OlPane.olToDoBar, false);
 
             //Call EnsureSolutionsModule to ensure that
             //Solutions module and custom folder icons
