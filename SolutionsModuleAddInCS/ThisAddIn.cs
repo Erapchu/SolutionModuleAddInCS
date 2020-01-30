@@ -32,9 +32,10 @@ namespace SolutionsModuleAddInCS
             //Solutions module and custom folder icons
             //appear in Outlook Navigation Pane
             EnsureSolutionsModule();
+            //Microsoft.Office.Tools.Outlook.FormRegionType
         }
 
-        [DllImport("user32.dll")]
+        /*[DllImport("user32.dll")]
         public static extern bool GetWindowRect(IntPtr hwnd, ref Rect1 rectangle);
 
         public struct Rect1
@@ -43,7 +44,7 @@ namespace SolutionsModuleAddInCS
             public int Top { get; set; }
             public int Right { get; set; }
             public int Bottom { get; set; }
-        }
+        }*/
 
         private void Explorer_FolderSwitch()
         {
@@ -241,10 +242,10 @@ namespace SolutionsModuleAddInCS
                     //Set Visibile to true
                     solutionsModule.Visible = true;
                 }
-                if (solutionsModule.Position != 5)
+                if (solutionsModule.Position != 1)
                 {
                     //Move SolutionsModule to Position = 5
-                    solutionsModule.Position = 5;
+                    solutionsModule.Position = 1;
                 }
                 //Create instance variable for Outlook.NavigationPane
                 Outlook.NavigationPane navPane = explorer.NavigationPane;
