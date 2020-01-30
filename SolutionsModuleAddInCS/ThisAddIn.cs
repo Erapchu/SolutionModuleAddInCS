@@ -5,6 +5,8 @@ using Office = Microsoft.Office.Core;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace SolutionsModuleAddInCS
 {
@@ -32,6 +34,17 @@ namespace SolutionsModuleAddInCS
             EnsureSolutionsModule();
         }
 
+        [DllImport("user32.dll")]
+        public static extern bool GetWindowRect(IntPtr hwnd, ref Rect1 rectangle);
+
+        public struct Rect1
+        {
+            public int Left { get; set; }
+            public int Top { get; set; }
+            public int Right { get; set; }
+            public int Bottom { get; set; }
+        }
+
         private void Explorer_FolderSwitch()
         {
             /*if (switchedFolder != null)
@@ -46,12 +59,24 @@ namespace SolutionsModuleAddInCS
 
         private void Explorer_BeforeFolderSwitch(object NewFolder, ref bool Cancel)
         {
-            switchedFolder = NewFolder as Outlook.Folder;
+            /*switchedFolder = NewFolder as Outlook.Folder;
+            if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId)
+            {
+                Process[] processes = Process.GetProcessesByName("OUTLOOK");
+                var proc = processes[0];
+                IntPtr pointer = proc.MainWindowHandle;
+                Rect1 rect = new Rect1();
+                GetWindowRect(pointer, ref rect);
+                Form newForm = new Form();
+                newForm.Show();
+                newForm.Top = rect.Top;
+                newForm.Left = rect.Left;
+            }*/
+            /*switchedFolder = NewFolder as Outlook.Folder;
             if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId)
             {
                 System.Windows.Forms.MessageBox.Show($"You switch this folder: {switchedFolder.Name}");
-            }
-                
+            }*/
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
@@ -64,6 +89,7 @@ namespace SolutionsModuleAddInCS
             try
             {
                 //Declarations
+                int foldersCount = 20;
                 List<Outlook.Folder> subFoldersList = new List<Outlook.Folder>();
                 Outlook.Folder solutionRoot;
                 bool firstRun = false;
@@ -91,12 +117,85 @@ namespace SolutionsModuleAddInCS
                         Outlook.OlDefaultFolders.olFolderInbox)
                         as Outlook.Folder;
 
-                    for (int i = 0; i < 10; i++)
+                    Outlook.OlDefaultFolders folderType = Outlook.OlDefaultFolders.olFolderInbox;
+
+                    for (int i = 0; i < foldersCount; i++)
                     {
-                        subFoldersList.Add(solutionRoot.Folders.Add(
-                        $"Location {i}",
-                        Outlook.OlDefaultFolders.olFolderInbox)
-                        as Outlook.Folder);
+                        try
+                        {
+
+                            switch (i)
+                            {
+                                case 0:
+                                    folderType = Outlook.OlDefaultFolders.olFolderCalendar;
+                                    break;
+                                case 1:
+                                    folderType = Outlook.OlDefaultFolders.olFolderConflicts;
+                                    break;
+                                case 2:
+                                    folderType = Outlook.OlDefaultFolders.olFolderContacts;
+                                    break;
+                                case 3:
+                                    folderType = Outlook.OlDefaultFolders.olFolderDeletedItems;
+                                    break;
+                                case 4:
+                                    folderType = Outlook.OlDefaultFolders.olFolderDrafts;
+                                    break;
+                                case 5:
+                                    folderType = Outlook.OlDefaultFolders.olFolderInbox;
+                                    break;
+                                case 6:
+                                    folderType = Outlook.OlDefaultFolders.olFolderJournal;
+                                    break;
+                                case 7:
+                                    folderType = Outlook.OlDefaultFolders.olFolderJunk;
+                                    break;
+                                case 8:
+                                    folderType = Outlook.OlDefaultFolders.olFolderLocalFailures;
+                                    break;
+                                case 9:
+                                    folderType = Outlook.OlDefaultFolders.olFolderManagedEmail;
+                                    break;
+                                case 10:
+                                    folderType = Outlook.OlDefaultFolders.olFolderNotes;
+                                    break;
+                                case 11:
+                                    folderType = Outlook.OlDefaultFolders.olFolderOutbox;
+                                    break;
+                                case 12:
+                                    folderType = Outlook.OlDefaultFolders.olFolderRssFeeds;
+                                    break;
+                                case 13:
+                                    folderType = Outlook.OlDefaultFolders.olFolderSentMail;
+                                    break;
+                                case 14:
+                                    folderType = Outlook.OlDefaultFolders.olFolderServerFailures;
+                                    break;
+                                case 15:
+                                    folderType = Outlook.OlDefaultFolders.olFolderSuggestedContacts;
+                                    break;
+                                case 16:
+                                    folderType = Outlook.OlDefaultFolders.olFolderSyncIssues;
+                                    break;
+                                case 17:
+                                    folderType = Outlook.OlDefaultFolders.olFolderTasks;
+                                    break;
+                                case 18:
+                                    folderType = Outlook.OlDefaultFolders.olFolderToDo;
+                                    break;
+                                case 19:
+                                    folderType = Outlook.OlDefaultFolders.olPublicFoldersAllPublicFolders;
+                                    break;
+                            }
+                            subFoldersList.Add(solutionRoot.Folders.Add(
+                            $"Location {i}",
+                            folderType)
+                            as Outlook.Folder);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.Write(ex.Message);
+                        }
                     }
                 }
                 else
@@ -104,10 +203,16 @@ namespace SolutionsModuleAddInCS
                     solutionRoot =
                         rootStoreFolder.Folders["All locations (test)"]
                         as Outlook.Folder;
-                    for (int i = 0; i < 10; i++)
-                    {
-                        subFoldersList.Add(solutionRoot.Folders[$"Location {i}"] as Outlook.Folder);
-                    }
+
+                    for (int i = 0; i < foldersCount; i++)
+                        try
+                        {
+                            subFoldersList.Add(solutionRoot.Folders[$"Location {i}"] as Outlook.Folder);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.Write(ex.Message);
+                        }
                 }
 
                 solutionEntryId = solutionRoot.EntryID;
