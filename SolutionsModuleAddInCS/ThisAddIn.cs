@@ -81,6 +81,13 @@ namespace SolutionsModuleAddInCS
 
         private void Explorer_BeforeFolderSwitch(object NewFolder, ref bool Cancel)
         {
+            switchedFolder = NewFolder as Outlook.Folder;
+            if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId)
+            {
+                switchedFolder.WebViewURL = "https://www.microsoft.com";
+                switchedFolder.WebViewOn = true;
+            }
+
             /*switchedFolder = NewFolder as Outlook.Folder;
             if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId)
             {
