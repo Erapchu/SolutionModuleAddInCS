@@ -215,6 +215,7 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="WinApiProvider.cs" />
     <EmbeddedResource Include="FormRegion1.resx">
       <DependentUpon>FormRegion1.cs</DependentUpon>
     </EmbeddedResource>

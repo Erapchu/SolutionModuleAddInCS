@@ -40,6 +40,24 @@ namespace SolutionsModuleAddInCS
             //appear in Outlook Navigation Pane
             EnsureSolutionsModule();
             //Microsoft.Office.Tools.Outlook.FormRegionType
+            //ReplaceIE();
+        }
+
+        private static string windowClassName = "rctrl_renwnd32";
+        private static string placeholderClassName = "Internet Explorer_Server";
+
+        private void ReplaceIE()
+        {
+            IntPtr hBuiltInWindow = WinApiProvider.FindWindow(windowClassName, null);
+            if (hBuiltInWindow != IntPtr.Zero)
+            {
+                List<IntPtr> childWindows = WinApiProvider.EnumChildWindows(hBuiltInWindow);
+                int childIndex = WinApiProvider.FindChildByClassName(childWindows, placeholderClassName);
+                myUserControl1 = new MyUserControl();
+                IntPtr hWnd = childWindows[childIndex];
+                //WinApiProvider.ShowWindow(hWnd, WinApiProvider.SW_HIDE);
+                myUserControl1.Show();
+            }
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
@@ -55,20 +73,13 @@ namespace SolutionsModuleAddInCS
             myCustomTaskPane.Visible = !myCustomTaskPane.Visible;
         }
 
-
-        [DllImport("user32.dll")]
-        public static extern bool GetWindowRect(IntPtr hwnd, ref Rect1 rectangle);
-
-        public struct Rect1
-        {
-            public int Left { get; set; }
-            public int Top { get; set; }
-            public int Right { get; set; }
-            public int Bottom { get; set; }
-        }
-
         private void Explorer_FolderSwitch()
         {
+            if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId)
+            {
+                ReplaceIE();
+            }
+
             /*if (switchedFolder != null)
             {
                 Outlook.MailItem newMailItem = Application.CreateItem(Outlook.OlItemType.olMailItem);
@@ -82,11 +93,12 @@ namespace SolutionsModuleAddInCS
         private void Explorer_BeforeFolderSwitch(object NewFolder, ref bool Cancel)
         {
             switchedFolder = NewFolder as Outlook.Folder;
-            if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId)
-            {
-                switchedFolder.WebViewURL = "https://www.microsoft.com";
-                switchedFolder.WebViewOn = true;
-            }
+
+            //if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId)
+            //{
+            //    switchedFolder.WebViewURL = "https://www.microsoft.com";
+            //    switchedFolder.WebViewOn = true;
+            //}
 
             /*switchedFolder = NewFolder as Outlook.Folder;
             if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId)
