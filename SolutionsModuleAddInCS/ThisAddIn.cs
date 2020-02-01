@@ -18,6 +18,7 @@ namespace SolutionsModuleAddInCS
         string solutionEntryId;
         private Microsoft.Office.Tools.CustomTaskPane myCustomTaskPane;
         private MyUserControl myUserControl1;
+        private Form1 form1;
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             //InitTaskPane();
@@ -53,10 +54,18 @@ namespace SolutionsModuleAddInCS
             {
                 List<IntPtr> childWindows = WinApiProvider.EnumChildWindows(hBuiltInWindow);
                 int childIndex = WinApiProvider.FindChildByClassName(childWindows, placeholderClassName);
-                myUserControl1 = new MyUserControl();
+                if (form1 is null)
+                    form1 = new Form1();
+                //myUserControl1 = new MyUserControl();
                 IntPtr hWnd = childWindows[childIndex];
+                WinApiProvider.SetParent(form1.Handle, hWnd);
+                form1.Show();
+                form1.WindowState = FormWindowState.Maximized;
+                form1.FormBorderStyle = FormBorderStyle.None;
+                //form1.FormBorderStyle = FormBorderStyle.None
+
                 //WinApiProvider.ShowWindow(hWnd, WinApiProvider.SW_HIDE);
-                myUserControl1.Show();
+                //myUserControl1.Show();
             }
         }
 
