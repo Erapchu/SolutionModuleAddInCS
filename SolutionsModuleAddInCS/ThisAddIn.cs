@@ -17,8 +17,10 @@ namespace SolutionsModuleAddInCS
         Outlook.Folder switchedFolder;
         string solutionEntryId;
         private Microsoft.Office.Tools.CustomTaskPane myCustomTaskPane;
+        private EmptyUserControl emptyUserControl;
         private MyUserControl myUserControl1;
         private Form1 form1;
+        private Form1 form2;
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             //InitTaskPane();
@@ -45,7 +47,8 @@ namespace SolutionsModuleAddInCS
         }
 
         private static string windowClassName = "rctrl_renwnd32";
-        private static string placeholderClassName = "Internet Explorer_Server";
+        private static string internetExplorerClassName = "Internet Explorer_Server";
+        private static string shellEmbeddingClassName = "Shell Embedding";
 
         private void ReplaceIE()
         {
@@ -53,20 +56,77 @@ namespace SolutionsModuleAddInCS
             if (hBuiltInWindow != IntPtr.Zero)
             {
                 List<IntPtr> childWindows = WinApiProvider.EnumChildWindows(hBuiltInWindow);
-                int childIndex = WinApiProvider.FindChildByClassName(childWindows, placeholderClassName);
+                int childIndex = WinApiProvider.FindChildByClassName(childWindows, shellEmbeddingClassName);
+                //if (form1 is null)
+                //    form1 = new Form1();
+                IntPtr targetHWnd = childWindows[childIndex];
+                var parentHWnd = WinApiProvider.GetParent(targetHWnd);
+
+                SetThreadDPIContext(targetHWnd);
+                
+                //var ph = WinApiProvider.SetParent(form1.Handle, IntPtr.Zero);
+                //var dpi = WinApiProvider.GetDpiForWindow(form1.Handle);
+                //dpi = WinApiProvider.GetDpiForWindow(targetHWnd);
+
                 if (form1 is null)
                     form1 = new Form1();
-                //myUserControl1 = new MyUserControl();
-                IntPtr hWnd = childWindows[childIndex];
-                WinApiProvider.SetParent(form1.Handle, hWnd);
+                /*UInt32 style = WinApiProvider.WS_CHILD | WinApiProvider.WS_CLIPSIBLINGS | WinApiProvider.WS_CLIPCHILDREN;
+                WinApiProvider.SetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE, style);*/
+
+                /*if (form2 is null)
+                    form2 = new Form1();
+                style = WinApiProvider.WS_CHILD | WinApiProvider.WS_CLIPSIBLINGS | WinApiProvider.WS_CLIPCHILDREN | WinApiProvider.WS_EX_CONTROLPARENT | WinApiProvider.WS_VISIBLE;
+                WinApiProvider.SetWindowLong(form2.Handle, WinApiProvider.GWL_STYLE, style);*/
+
+                //form1.Show();
+
+                //var ph = WinApiProvider.SetParent(form1.Handle, form2.Handle);
+
+                var ph = WinApiProvider.SetParent(form1.Handle, targetHWnd);
+
                 form1.Show();
-                form1.WindowState = FormWindowState.Maximized;
-                form1.FormBorderStyle = FormBorderStyle.None;
-                //form1.FormBorderStyle = FormBorderStyle.None
+
+
+                var a = Marshal.GetLastWin32Error();
+
+                /*var style = WinApiProvider.GetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE);
+                style = (style & ~(WinApiProvider.WS_POPUP)) | WinApiProvider.WS_CHILD;
+                WinApiProvider.SetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE, style);*/
+
+                /*var t = WinApiProvider.SetParent(emptyUserControl.Handle, parentHWnd);
+                emptyUserControl.Visible = true;
+                emptyUserControl.Show();
+                var emptyUCParentHWnd = WinApiProvider.GetParent(emptyUserControl.Handle);
+
+                if (myUserControl1 is null)
+                    myUserControl1 = new MyUserControl();
+
+                WinApiProvider.SetParent(myUserControl1.Handle, emptyUserControl.Handle);
+                myUserControl1.Visible = true;
+                var myUCParentHWnd = WinApiProvider.GetParent(myUserControl1.Handle);
+
+                myUserControl1.Show();*/
+
+
+
+                //form1.WindowState = FormWindowState.Maximized;
+                //form1.FormBorderStyle = FormBorderStyle.None;
 
                 //WinApiProvider.ShowWindow(hWnd, WinApiProvider.SW_HIDE);
                 //myUserControl1.Show();
             }
+        }
+
+        public int SetThreadDPIContext(IntPtr contextWindow)
+        {
+            int num = -1;
+            num = WinApiProvider.GetThreadDpiAwarenessContext();
+            int num2 = WinApiProvider.GetWindowDpiAwarenessContext(contextWindow);
+            if (num != num2 && WinApiProvider.IsValidDpiAwarenessContext(num2))
+            {
+                WinApiProvider.SetThreadDpiAwarenessContext(num2);
+            }
+            return num;
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)

@@ -268,17 +268,27 @@ namespace SolutionsModuleAddInCS
         public const int SC_CLOSE = 0xF060;
 
         public const int GWL_WNDPROC = -4;
+        public const int GWL_STYLE = -16;
 
         /// <summary>
         /// Set a new parent for the given window handle
         /// </summary>
         /// <param name="hWndChild">The handle of the target window</param>
         /// <param name="hWndNewParent">The window handle of the parent window</param>
-        [DllImport("user32")]
+        [DllImport("user32", SetLastError = true)]
         public static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
 
         [DllImport("user32")]
         public static extern IntPtr GetParent(IntPtr hWndChild);
+
+        [DllImport("user32", EntryPoint = "GetProp")]
+        public static extern int GetPropA(int hwnd, string lpString);
+
+        [DllImport("user32")]
+        public static extern int RemoveProp(int hwnd, string lpString);
+
+        [DllImport("user32")]
+        public static extern uint GetDpiForWindow(IntPtr hWnd);
 
         /// <summary>
         /// Create a new window.
@@ -397,7 +407,7 @@ namespace SolutionsModuleAddInCS
 
         public const int LOGPIXELSX = 88;    /* Logical pixels/inch in X */
         public const int LOGPIXELSY = 90;    /* Logical pixels/inch in Y */
-
+        
         public static Point GetScreenDpi()
         {
             IntPtr hDc = GetDC(IntPtr.Zero);
@@ -413,6 +423,25 @@ namespace SolutionsModuleAddInCS
 
         public const int WH_CALLWNDPROC = 4;
         public const int WH_KEYBOARD_LL = 13;
+
+        public const UInt32 WS_POPUP = 0x80000000;
+        public const UInt32 WS_CHILD = 0x40000000;
+        public const UInt32 WS_CLIPSIBLINGS = 0x04000000;
+        public const UInt32 WS_CLIPCHILDREN = 0x02000000;
+        public const UInt32 WS_VISIBLE = 0x10000000;
+        public const UInt32 WS_EX_CONTROLPARENT = 0x00010000;
+
+        [DllImport("user32.dll")]
+        public static extern int GetThreadDpiAwarenessContext();
+
+        [DllImport("user32.dll")]
+        public static extern int GetWindowDpiAwarenessContext(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        public static extern int SetThreadDpiAwarenessContext(int dpi);
+
+        [DllImport("user32.dll")]
+        public static extern bool IsValidDpiAwarenessContext(int first);
 
         public delegate int HookCallbackProc(int nCode, int wParam, int lParam);
 
