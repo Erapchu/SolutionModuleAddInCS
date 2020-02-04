@@ -21,6 +21,7 @@ namespace SolutionsModuleAddInCS
         private MyUserControl myUserControl1;
         private Form1 form1;
         private Form1 form2;
+        Window1 window;
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             //InitTaskPane();
@@ -68,8 +69,8 @@ namespace SolutionsModuleAddInCS
                 //var dpi = WinApiProvider.GetDpiForWindow(form1.Handle);
                 //dpi = WinApiProvider.GetDpiForWindow(targetHWnd);
 
-                if (form1 is null)
-                    form1 = new Form1();
+                if (window is null)
+                    window = new Window1();
                 /*UInt32 style = WinApiProvider.WS_CHILD | WinApiProvider.WS_CLIPSIBLINGS | WinApiProvider.WS_CLIPCHILDREN;
                 WinApiProvider.SetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE, style);*/
 
@@ -79,13 +80,12 @@ namespace SolutionsModuleAddInCS
                 WinApiProvider.SetWindowLong(form2.Handle, WinApiProvider.GWL_STYLE, style);*/
 
                 //form1.Show();
+                var wih = new System.Windows.Interop.WindowInteropHelper(window);
+                IntPtr hWnd = wih.Handle;
 
-                //var ph = WinApiProvider.SetParent(form1.Handle, form2.Handle);
+                var ph = WinApiProvider.SetParent(hWnd, targetHWnd);
 
-                var ph = WinApiProvider.SetParent(form1.Handle, targetHWnd);
-
-                form1.Show();
-
+                window.Show();
 
                 var a = Marshal.GetLastWin32Error();
 
