@@ -14,13 +14,14 @@ namespace SolutionsModuleAddInCS
     {
         Outlook.SolutionsModule solutionsModule;
         Outlook.Explorer explorer;
+        IntPtr hwndExplorer = IntPtr.Zero;
         Outlook.Folder switchedFolder;
         string solutionEntryId;
         private Microsoft.Office.Tools.CustomTaskPane myCustomTaskPane;
         private EmptyUserControl emptyUserControl;
         private MyUserControl myUserControl1;
         private Form1 form1;
-        private Form1 form2;
+        private MainForm mainForm;
         Window1 window;
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
@@ -29,8 +30,9 @@ namespace SolutionsModuleAddInCS
             explorer = Application.ActiveExplorer();
             explorer.BeforeFolderSwitch += Explorer_BeforeFolderSwitch;
             explorer.FolderSwitch += Explorer_FolderSwitch;
+            hwndExplorer = WinApiProvider.GetExplorerWindowHandle(explorer);
 
-            var inspector = Application.ActiveInspector();
+            //var inspector = Application.ActiveInspector();
             //inspector.NewFormRegion();
 
             //explorer.ShowPane(Outlook.OlPane.olFolderList, false);
@@ -47,74 +49,111 @@ namespace SolutionsModuleAddInCS
             //ReplaceIE();
         }
 
-        private static string windowClassName = "rctrl_renwnd32";
+        private static string outlookClassName = "rctrl_renwnd32";
         private static string internetExplorerClassName = "Internet Explorer_Server";
         private static string shellEmbeddingClassName = "Shell Embedding";
+        private static string netUINativeClassName = "NetUINativeHWNDHost";
+
+        private IntPtr GetHWNDInExplorer(string className, int? controlID = null)
+        {
+            IntPtr hWnd;
+            bool flag = controlID != null;
+
+            //hWnd = WinApiProvider.FindWindowEx(hwndExplorer, IntPtr.Zero, className, string.Empty);
+            //if (hWnd != IntPtr.Zero)
+            //    return hWnd;
+
+            List<IntPtr> childWindows = WinApiProvider.EnumChildWindows(hwndExplorer);
+            int targetIndex = WinApiProvider.FindChildByClassName(childWindows, className);
+            IntPtr targetHWnd = childWindows[targetIndex];
+            var parentHWnd = WinApiProvider.GetParent(targetHWnd);
+            while (parentHWnd != hwndExplorer && flag)
+            {
+                childWindows.RemoveAt(targetIndex);
+                targetIndex = WinApiProvider.FindChildByClassName(childWindows, className);
+                targetHWnd = childWindows[targetIndex];
+                parentHWnd = WinApiProvider.GetParent(targetHWnd);
+                if (controlID != null)
+                {
+                    var cID = WinApiProvider.GetDlgCtrlID(targetHWnd);
+                    flag = cID == controlID;
+                }
+            }
+            hWnd = targetHWnd;
+
+            return hWnd;
+        }
+
+        private void SetChildWindowStyle(IntPtr windowHWND)
+        {
+            var style = WinApiProvider.GetWindowLong(windowHWND, WinApiProvider.GWL_STYLE);
+            style = (style & ~WinApiProvider.WS_POPUP & ~WinApiProvider.WS_OVERLAPPEDWINDOW) | WinApiProvider.WS_CHILD;
+            //var style = WinApiProvider.WS_CHILD | WinApiProvider.WS_CLIPSIBLINGS | WinApiProvider.WS_CLIPCHILDREN | WinApiProvider.WS_EX_CONTROLPARENT | WinApiProvider.WS_VISIBLE;
+            WinApiProvider.SetWindowLong(windowHWND, WinApiProvider.GWL_STYLE, style);
+        }
 
         private void ReplaceIE()
         {
-            IntPtr hBuiltInWindow = WinApiProvider.FindWindow(windowClassName, null);
-            if (hBuiltInWindow != IntPtr.Zero)
-            {
-                List<IntPtr> childWindows = WinApiProvider.EnumChildWindows(hBuiltInWindow);
-                int childIndex = WinApiProvider.FindChildByClassName(childWindows, shellEmbeddingClassName);
-                //if (form1 is null)
-                //    form1 = new Form1();
-                IntPtr targetHWnd = childWindows[childIndex];
-                var parentHWnd = WinApiProvider.GetParent(targetHWnd);
 
-                SetThreadDPIContext(targetHWnd);
-                
-                //var ph = WinApiProvider.SetParent(form1.Handle, IntPtr.Zero);
-                //var dpi = WinApiProvider.GetDpiForWindow(form1.Handle);
-                //dpi = WinApiProvider.GetDpiForWindow(targetHWnd);
+            SetThreadDPIContext(hwndExplorer);
 
-                if (window is null)
-                    window = new Window1();
-                /*UInt32 style = WinApiProvider.WS_CHILD | WinApiProvider.WS_CLIPSIBLINGS | WinApiProvider.WS_CLIPCHILDREN;
-                WinApiProvider.SetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE, style);*/
+            //var dpi = WinApiProvider.GetDpiForWindow(form1.Handle);
+            //dpi = WinApiProvider.GetDpiForWindow(targetHWnd);
 
-                /*if (form2 is null)
-                    form2 = new Form1();
-                style = WinApiProvider.WS_CHILD | WinApiProvider.WS_CLIPSIBLINGS | WinApiProvider.WS_CLIPCHILDREN | WinApiProvider.WS_EX_CONTROLPARENT | WinApiProvider.WS_VISIBLE;
-                WinApiProvider.SetWindowLong(form2.Handle, WinApiProvider.GWL_STYLE, style);*/
+            /*if (window is null)
+                window = new Window1();
+            var wih = new System.Windows.Interop.WindowInteropHelper(window);
+            IntPtr windowHWND = wih.EnsureHandle();*/
 
-                //form1.Show();
-                var wih = new System.Windows.Interop.WindowInteropHelper(window);
-                IntPtr hWnd = wih.Handle;
+            if (mainForm is null)
+                mainForm = new MainForm();
 
-                var ph = WinApiProvider.SetParent(hWnd, targetHWnd);
+            var hwndIE = GetHWNDInExplorer(shellEmbeddingClassName);
+            Rect tempRect = new Rect();
+            WinApiProvider.GetWindowRect(hwndIE, ref tempRect);
+            //mainForm.Top = 0;
+            //mainForm.Left = 0;
+            
+            SetChildWindowStyle(mainForm.Handle);
+            var ph = WinApiProvider.SetParent(mainForm.Handle, hwndIE);
+            //mainForm.WindowState = FormWindowState.Maximized;
+            mainForm.Show();
 
-                window.Show();
+            if (form1 is null)
+                form1 = new Form1();
+            var leftPaneHWND = GetHWNDInExplorer(netUINativeClassName, 0x67);
+            SetChildWindowStyle(form1.Handle);
+            ph = WinApiProvider.SetParent(form1.Handle, leftPaneHWND);
+            //form1.WindowState = FormWindowState.Maximized;
+            form1.Show();
 
-                var a = Marshal.GetLastWin32Error();
+            var a = Marshal.GetLastWin32Error();
 
-                /*var style = WinApiProvider.GetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE);
-                style = (style & ~(WinApiProvider.WS_POPUP)) | WinApiProvider.WS_CHILD;
-                WinApiProvider.SetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE, style);*/
+            /*var style = WinApiProvider.GetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE);
+            style = (style & ~(WinApiProvider.WS_POPUP)) | WinApiProvider.WS_CHILD;
+            WinApiProvider.SetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE, style);*/
 
-                /*var t = WinApiProvider.SetParent(emptyUserControl.Handle, parentHWnd);
-                emptyUserControl.Visible = true;
-                emptyUserControl.Show();
-                var emptyUCParentHWnd = WinApiProvider.GetParent(emptyUserControl.Handle);
+            /*var t = WinApiProvider.SetParent(emptyUserControl.Handle, parentHWnd);
+            emptyUserControl.Visible = true;
+            emptyUserControl.Show();
+            var emptyUCParentHWnd = WinApiProvider.GetParent(emptyUserControl.Handle);
 
-                if (myUserControl1 is null)
-                    myUserControl1 = new MyUserControl();
+            if (myUserControl1 is null)
+                myUserControl1 = new MyUserControl();
 
-                WinApiProvider.SetParent(myUserControl1.Handle, emptyUserControl.Handle);
-                myUserControl1.Visible = true;
-                var myUCParentHWnd = WinApiProvider.GetParent(myUserControl1.Handle);
+            WinApiProvider.SetParent(myUserControl1.Handle, emptyUserControl.Handle);
+            myUserControl1.Visible = true;
+            var myUCParentHWnd = WinApiProvider.GetParent(myUserControl1.Handle);
 
-                myUserControl1.Show();*/
-
+            myUserControl1.Show();*/
 
 
-                //form1.WindowState = FormWindowState.Maximized;
-                //form1.FormBorderStyle = FormBorderStyle.None;
 
-                //WinApiProvider.ShowWindow(hWnd, WinApiProvider.SW_HIDE);
-                //myUserControl1.Show();
-            }
+            //form1.WindowState = FormWindowState.Maximized;
+            //form1.FormBorderStyle = FormBorderStyle.None;
+
+            //WinApiProvider.ShowWindow(hWnd, WinApiProvider.SW_HIDE);
+            //myUserControl1.Show();
         }
 
         public int SetThreadDPIContext(IntPtr contextWindow)
@@ -144,9 +183,16 @@ namespace SolutionsModuleAddInCS
 
         private void Explorer_FolderSwitch()
         {
-            if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId)
+            if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId && switchedFolder.WebViewOn)
             {
                 ReplaceIE();
+            }
+            else
+            {
+                if (mainForm != null && mainForm.Visible)
+                    mainForm.Hide();
+                if (form1 != null && form1.Visible)
+                    form1.Hide();
             }
 
             /*if (switchedFolder != null)

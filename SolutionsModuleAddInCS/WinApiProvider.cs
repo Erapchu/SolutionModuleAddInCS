@@ -24,6 +24,9 @@ namespace SolutionsModuleAddInCS
         [DllImport("user32.dll")]
         public static extern bool GetWindowRect(IntPtr hwnd, ref Rect1 rectangle);
 
+        [DllImport("user32.dll")]
+        public static extern bool OffsetRect(ref Rect lpRect, int dx, int dy);
+
         public struct Rect1
         {
             public int Left { get; set; }
@@ -246,6 +249,9 @@ namespace SolutionsModuleAddInCS
         [DllImport("user32")]
         public static extern int PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
 
+        [DllImport("user32")]
+        public static extern int GetDlgCtrlID(IntPtr hWnd);
+
         /// <summary>
         /// Constant defines a System command message
         /// </summary>
@@ -407,7 +413,7 @@ namespace SolutionsModuleAddInCS
 
         public const int LOGPIXELSX = 88;    /* Logical pixels/inch in X */
         public const int LOGPIXELSY = 90;    /* Logical pixels/inch in Y */
-        
+
         public static Point GetScreenDpi()
         {
             IntPtr hDc = GetDC(IntPtr.Zero);
@@ -429,7 +435,11 @@ namespace SolutionsModuleAddInCS
         public const UInt32 WS_CLIPSIBLINGS = 0x04000000;
         public const UInt32 WS_CLIPCHILDREN = 0x02000000;
         public const UInt32 WS_VISIBLE = 0x10000000;
+        public const UInt32 WS_TABSTOP = 0x00010000;
+        public const UInt32 WS_OVERLAPPEDWINDOW = 0x00CF0000;
+
         public const UInt32 WS_EX_CONTROLPARENT = 0x00010000;
+        public const UInt32 WS_EX_APPWINDOW = 0x00040000;
 
         [DllImport("user32.dll")]
         public static extern int GetThreadDpiAwarenessContext();
@@ -455,6 +465,35 @@ namespace SolutionsModuleAddInCS
 
         public const int WM_USER = 0x400;
         public const int WM_SMS_SENDED = WM_USER + 1;
+
+        public static IntPtr GetExplorerWindowHandle(object explorer)
+        {
+            IntPtr explorerHWND = IntPtr.Zero;
+            (explorer as IOLEWindow)?.GetWindow(out explorerHWND);
+            return explorerHWND;
+        }
+
+        /// <summary>
+        /// Find direct child window in parent
+        /// </summary>
+        /// <param name="hwndParent">Parent HWND</param>
+        /// <param name="hwndChildAfter">Direct child HWND of window, search after this HWND</param>
+        /// <param name="className">Class name</param>
+        /// <param name="windowName">Window name</param>
+        /// <returns>Finded HWND</returns>
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string className, string windowName);
+    }
+
+    [ComImport]
+    [ComVisible(false)]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("00000114-0000-0000-C000-000000000046")]
+    internal interface IOLEWindow
+    {
+        void GetWindow(out IntPtr wnd);
+
+        void ContextSensitiveHelp(bool fEnterMode);
     }
 
     public struct Rect
