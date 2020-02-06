@@ -4,10 +4,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         xmlns:local="clr-namespace:SolutionsModuleAddInCS"
-        mc:Ignorable="d" 
-        Width="400" Height="300"        
+        mc:Ignorable="d"
+        Width="400" Height="300"
         Top="0"
         Left="0">
+    <Window.Resources>
+        <BitmapImage 
+            x:Key="FolderImage"
+            UriSource="/SolutionsModuleAddInCS;component/Resources/folder-horizontal-open.png"/>
+        <Style x:Key="StndImage" TargetType="Image">
+            <Setter Property="Source" Value="{StaticResource FolderImage}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
     <Grid>
         <ListBox SelectionMode="Extended">
             <ListBoxItem>
@@ -17,10 +27,25 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Image 
-                        Grid.Column="0" 
-                        Source="/SolutionsModuleAddInCS;component/Resources/folder-horizontal-open.png"
+                        Style="{StaticResource StndImage}"
+                        Grid.Column="0"
+                        Margin="3"/>    
+                    <TextBlock 
+                        Grid.Column="1" 
+                        Text="C:\Windows\"
                         HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
+                        VerticalAlignment="Center"/>
+                </Grid>
+            </ListBoxItem>
+            <ListBoxItem>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Image 
+                        Style="{StaticResource StndImage}"
+                        Grid.Column="0"
                         Margin="3"/>
                     <TextBlock 
                         Grid.Column="1" 
@@ -36,10 +61,8 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Image 
-                        Grid.Column="0" 
-                        Source="/SolutionsModuleAddInCS;component/Resources/folder-horizontal-open.png"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
+                        Style="{StaticResource StndImage}"
+                        Grid.Column="0"
                         Margin="3"/>
                     <TextBlock 
                         Grid.Column="1" 
@@ -55,67 +78,8 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Image 
-                        Grid.Column="0" 
-                        Source="/SolutionsModuleAddInCS;component/Resources/folder-horizontal-open.png"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Margin="3"/>
-                    <TextBlock 
-                        Grid.Column="1" 
-                        Text="C:\Windows\"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"/>
-                </Grid>
-            </ListBoxItem>
-            <ListBoxItem>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Image 
-                        Grid.Column="0" 
-                        Source="/SolutionsModuleAddInCS;component/Resources/folder-horizontal-open.png"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Margin="3"/>
-                    <TextBlock 
-                        Grid.Column="1" 
-                        Text="C:\Windows\"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"/>
-                </Grid>
-            </ListBoxItem>
-            <ListBoxItem>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Image 
-                        Grid.Column="0" 
-                        Source="/SolutionsModuleAddInCS;component/Resources/folder-horizontal-open.png"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Margin="3"/>
-                    <TextBlock 
-                        Grid.Column="1" 
-                        Text="C:\Windows\"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"/>
-                </Grid>
-            </ListBoxItem>
-            <ListBoxItem>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Image 
-                        Grid.Column="0" 
-                        Source="/SolutionsModuleAddInCS;component/Resources/folder-horizontal-open.png"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
+                        Style="{StaticResource StndImage}"
+                        Grid.Column="0"
                         Margin="3"/>
                     <TextBlock 
                         Grid.Column="1" 

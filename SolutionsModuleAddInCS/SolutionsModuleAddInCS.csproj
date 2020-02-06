@@ -310,7 +310,7 @@
     <None Include="Resources\phone.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\folder-horizontal-open.png" />
+    <Resource Include="Resources\folder-horizontal-open.png" />
     <Content Include="Resources\folder.ico" />
   </ItemGroup>
   <ItemGroup>

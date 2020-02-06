@@ -70,7 +70,7 @@ namespace SolutionsModuleAddInCS
             int targetIndex = WinApiProvider.FindChildByClassName(childWindows, className);
             IntPtr targetHWnd = childWindows[targetIndex];
             var parentHWnd = WinApiProvider.GetParent(targetHWnd);
-            while (parentHWnd != hwndExplorer && flag)
+            while (parentHWnd != hwndExplorer && flag || parentHWnd != hwndExplorer)
             {
                 childWindows.RemoveAt(targetIndex);
                 targetIndex = WinApiProvider.FindChildByClassName(childWindows, className);
