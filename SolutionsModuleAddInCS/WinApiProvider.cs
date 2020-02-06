@@ -252,6 +252,17 @@ namespace SolutionsModuleAddInCS
         [DllImport("user32")]
         public static extern int GetDlgCtrlID(IntPtr hWnd);
 
+        [DllImport("user32")]
+        public static extern int MapWindowPoints(IntPtr hWndFrom, IntPtr hWndTo, ref Rect rect, uint cPoints);
+
+        public static Rect GetLocalWindowPosition(IntPtr hWnd, IntPtr parent)
+        {
+            Rect rect = new Rect();
+            GetWindowRect(hWnd, ref rect);
+            MapWindowPoints(IntPtr.Zero, parent, ref rect, 2);
+            return rect;
+        }
+
         /// <summary>
         /// Constant defines a System command message
         /// </summary>

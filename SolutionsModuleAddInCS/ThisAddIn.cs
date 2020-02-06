@@ -45,8 +45,8 @@ namespace SolutionsModuleAddInCS
             //Solutions module and custom folder icons
             //appear in Outlook Navigation Pane
             EnsureSolutionsModule();
+
             //Microsoft.Office.Tools.Outlook.FormRegionType
-            //ReplaceIE();
         }
 
         private static string outlookClassName = "rctrl_renwnd32";
@@ -107,31 +107,26 @@ namespace SolutionsModuleAddInCS
 
             if (mainForm is null)
                 mainForm = new MainForm();
-
-            var hwndIE = GetHWNDInExplorer(shellEmbeddingClassName);
+            var shellHWnd = GetHWNDInExplorer(shellEmbeddingClassName);
+            var ph = WinApiProvider.SetParent(mainForm.Handle, shellHWnd);
             Rect tempRect = new Rect();
-            WinApiProvider.GetWindowRect(hwndIE, ref tempRect);
-            //mainForm.Top = 0;
-            //mainForm.Left = 0;
-            
+            WinApiProvider.GetWindowRect(shellHWnd, ref tempRect);
+            mainForm.Location = new System.Drawing.Point(0, 0);
+            mainForm.Size = new System.Drawing.Size(tempRect.right - tempRect.left, tempRect.bottom - tempRect.top);
             SetChildWindowStyle(mainForm.Handle);
-            var ph = WinApiProvider.SetParent(mainForm.Handle, hwndIE);
-            //mainForm.WindowState = FormWindowState.Maximized;
             mainForm.Show();
 
             if (form1 is null)
                 form1 = new Form1();
             var leftPaneHWND = GetHWNDInExplorer(netUINativeClassName, 0x67);
-            SetChildWindowStyle(form1.Handle);
             ph = WinApiProvider.SetParent(form1.Handle, leftPaneHWND);
-            //form1.WindowState = FormWindowState.Maximized;
+            WinApiProvider.GetWindowRect(leftPaneHWND, ref tempRect);
+            form1.Location = new System.Drawing.Point(0, 0);
+            form1.Size = new System.Drawing.Size(tempRect.right - tempRect.left, tempRect.bottom - tempRect.top);
+            SetChildWindowStyle(form1.Handle);
             form1.Show();
 
             var a = Marshal.GetLastWin32Error();
-
-            /*var style = WinApiProvider.GetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE);
-            style = (style & ~(WinApiProvider.WS_POPUP)) | WinApiProvider.WS_CHILD;
-            WinApiProvider.SetWindowLong(form1.Handle, WinApiProvider.GWL_STYLE, style);*/
 
             /*var t = WinApiProvider.SetParent(emptyUserControl.Handle, parentHWnd);
             emptyUserControl.Visible = true;
@@ -146,11 +141,6 @@ namespace SolutionsModuleAddInCS
             var myUCParentHWnd = WinApiProvider.GetParent(myUserControl1.Handle);
 
             myUserControl1.Show();*/
-
-
-
-            //form1.WindowState = FormWindowState.Maximized;
-            //form1.FormBorderStyle = FormBorderStyle.None;
 
             //WinApiProvider.ShowWindow(hWnd, WinApiProvider.SW_HIDE);
             //myUserControl1.Show();
@@ -183,7 +173,7 @@ namespace SolutionsModuleAddInCS
 
         private void Explorer_FolderSwitch()
         {
-            if (switchedFolder != null && (switchedFolder.Parent as Outlook.Folder).EntryID == solutionEntryId && switchedFolder.WebViewOn)
+            if (switchedFolder != null && switchedFolder.EntryID == solutionEntryId && switchedFolder.WebViewOn)
             {
                 ReplaceIE();
             }
@@ -307,8 +297,8 @@ namespace SolutionsModuleAddInCS
             try
             {
                 //Declarations
-                int foldersCount = 10;
-                List<Outlook.Folder> subFoldersList = new List<Outlook.Folder>();
+                //int foldersCount = 10;
+                //List<Outlook.Folder> subFoldersList = new List<Outlook.Folder>();
                 Outlook.Folder solutionRoot;
                 bool firstRun = false;
                 Outlook.Folder rootStoreFolder =
@@ -320,7 +310,7 @@ namespace SolutionsModuleAddInCS
                 try
                 {
                     solutionRoot =
-                        rootStoreFolder.Folders["All locations (test)"]
+                        rootStoreFolder.Folders["Search (test)"]
                         as Outlook.Folder;
                 }
                 catch
@@ -331,11 +321,11 @@ namespace SolutionsModuleAddInCS
                 if (firstRun == true)
                 {
                     solutionRoot =
-                        rootStoreFolder.Folders.Add("All locations (test)",
+                        rootStoreFolder.Folders.Add("Search (test)",
                         Outlook.OlDefaultFolders.olFolderInbox)
                         as Outlook.Folder;
 
-                    Outlook.OlDefaultFolders folderType = Outlook.OlDefaultFolders.olFolderInbox;
+                    /*Outlook.OlDefaultFolders folderType = Outlook.OlDefaultFolders.olFolderInbox;
 
                     for (int i = 0; i < foldersCount; i++)
                     {
@@ -350,15 +340,15 @@ namespace SolutionsModuleAddInCS
                         {
                             Debug.Write(ex.Message);
                         }
-                    }
+                    }*/
                 }
                 else
                 {
                     solutionRoot =
-                        rootStoreFolder.Folders["All locations (test)"]
+                        rootStoreFolder.Folders["Search (test)"]
                         as Outlook.Folder;
 
-                    for (int i = 0; i < foldersCount; i++)
+                    /*for (int i = 0; i < foldersCount; i++)
                         try
                         {
                             subFoldersList.Add(solutionRoot.Folders[$"Location {i}"] as Outlook.Folder);
@@ -366,19 +356,24 @@ namespace SolutionsModuleAddInCS
                         catch (Exception ex)
                         {
                             Debug.Write(ex.Message);
-                        }
+                        }*/
                 }
 
                 solutionEntryId = solutionRoot.EntryID;
+                if (!solutionRoot.WebViewOn || solutionRoot.WebViewURL == string.Empty)
+                {
+                    solutionRoot.WebViewURL = @"file:\\\C:\Users\Andrey\AppData\Local\Temp\AddinExpress\ADXOlFormGeneral.html";
+                    solutionRoot.WebViewOn = true;
+                }
 
                 //Get the icons for the solution
-                stdole.StdPicture rootPict =
-                    PictureDispConverter.ToIPictureDisp(
-                    Properties.Resources.folder)
-                    as stdole.StdPicture;
+                //stdole.StdPicture rootPict =
+                //    PictureDispConverter.ToIPictureDisp(
+                //    Properties.Resources.folder)
+                //    as stdole.StdPicture;
                 //Set the icons for solution folders
-                solutionRoot.SetCustomIcon(rootPict);
-                subFoldersList.ForEach(f => f.SetCustomIcon(rootPict));
+                //solutionRoot.SetCustomIcon(rootPict);
+                //subFoldersList.ForEach(f => f.SetCustomIcon(rootPict));
 
                 //Obtain a reference to the SolutionsModule
                 solutionsModule =
