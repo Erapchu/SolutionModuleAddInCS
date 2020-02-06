@@ -22,7 +22,10 @@ namespace SolutionsModuleAddInCS
         private MyUserControl myUserControl1;
         private Form1 form1;
         private MainForm mainForm;
-        Window1 window;
+        WinApiSubClass shellWinApiClass;
+        WinApiSubClass leftPaneWinApiClass;
+        Window1 window1;
+        Window2 window2;
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             //InitTaskPane();
@@ -92,6 +95,34 @@ namespace SolutionsModuleAddInCS
             WinApiProvider.SetWindowLong(windowHWND, WinApiProvider.GWL_STYLE, style);
         }
 
+        private void mainForm_WndProc(ref Message m)
+        {
+            if (m.Msg == WinApiProvider.WM_SIZE)
+            {
+                int lParam = m.LParam.ToInt32();
+                System.Drawing.Size newSize = new System.Drawing.Size(lParam & 0xFFFF, (int)(lParam & 0xFFFF0000) / 0x10000);
+                if (window1 != null)
+                {
+                    window1.Width = newSize.Width;
+                    window1.Height = newSize.Height;
+                }
+            }
+        }
+
+        private void leftPaneForm_WndProc(ref Message m)
+        {
+            if (m.Msg == WinApiProvider.WM_SIZE)
+            {
+                int lParam = m.LParam.ToInt32();
+                System.Drawing.Size newSize = new System.Drawing.Size(lParam & 0xFFFF, (int)(lParam & 0xFFFF0000) / 0x10000);
+                if (window2 != null)
+                {
+                    window2.Width = newSize.Width;
+                    window2.Height = newSize.Height;
+                }
+            }
+        }
+
         private void ReplaceIE()
         {
 
@@ -105,26 +136,52 @@ namespace SolutionsModuleAddInCS
             var wih = new System.Windows.Interop.WindowInteropHelper(window);
             IntPtr windowHWND = wih.EnsureHandle();*/
 
-            if (mainForm is null)
-                mainForm = new MainForm();
+            //if (mainForm is null)
+            //    mainForm = new MainForm();
+
+            if (window1 is null)
+                window1 = new Window1();
+            var wih = new System.Windows.Interop.WindowInteropHelper(window1);
+            IntPtr window1HWND = wih.EnsureHandle();
             var shellHWnd = GetHWNDInExplorer(shellEmbeddingClassName);
-            var ph = WinApiProvider.SetParent(mainForm.Handle, shellHWnd);
+            var ph = WinApiProvider.SetParent(window1HWND, shellHWnd);
+            if (shellWinApiClass is null)
+            {
+                shellWinApiClass = new WinApiSubClass(shellHWnd);
+                shellWinApiClass.CallbackProc += mainForm_WndProc;
+            }
+
             Rect tempRect = new Rect();
             WinApiProvider.GetWindowRect(shellHWnd, ref tempRect);
-            mainForm.Location = new System.Drawing.Point(0, 0);
-            mainForm.Size = new System.Drawing.Size(tempRect.right - tempRect.left, tempRect.bottom - tempRect.top);
-            SetChildWindowStyle(mainForm.Handle);
-            mainForm.Show();
+            window1.Width = tempRect.right - tempRect.left;
+            window1.Height = tempRect.bottom - tempRect.top;
+            //mainForm.Location = new System.Drawing.Point(0, 0);
+            //mainForm.Size = new System.Drawing.Size(tempRect.right - tempRect.left, tempRect.bottom - tempRect.top);
+            SetChildWindowStyle(window1HWND);
+            window1.Show();
 
-            if (form1 is null)
-                form1 = new Form1();
+
+            if (window2 is null)
+                window2 = new Window2();
+            wih = new System.Windows.Interop.WindowInteropHelper(window2);
+            IntPtr window2HWND = wih.EnsureHandle();
             var leftPaneHWND = GetHWNDInExplorer(netUINativeClassName, 0x67);
-            ph = WinApiProvider.SetParent(form1.Handle, leftPaneHWND);
+            ph = WinApiProvider.SetParent(window2HWND, leftPaneHWND);
+            if (leftPaneWinApiClass is null)
+            {
+                leftPaneWinApiClass = new WinApiSubClass(leftPaneHWND);
+                leftPaneWinApiClass.CallbackProc += leftPaneForm_WndProc;
+            }
+
             WinApiProvider.GetWindowRect(leftPaneHWND, ref tempRect);
-            form1.Location = new System.Drawing.Point(0, 0);
-            form1.Size = new System.Drawing.Size(tempRect.right - tempRect.left, tempRect.bottom - tempRect.top);
-            SetChildWindowStyle(form1.Handle);
-            form1.Show();
+            window2.Width = tempRect.right - tempRect.left;
+            window2.Height = tempRect.bottom - tempRect.top;
+            //form1.Location = new System.Drawing.Point(0, 0);
+            //form1.Size = new System.Drawing.Size(tempRect.right - tempRect.left, tempRect.bottom - tempRect.top);
+            SetChildWindowStyle(window2HWND);
+            window2.Show();
+
+            WinApiProvider.SetFocus(hwndExplorer);
 
             var a = Marshal.GetLastWin32Error();
 
@@ -179,10 +236,10 @@ namespace SolutionsModuleAddInCS
             }
             else
             {
-                if (mainForm != null && mainForm.Visible)
-                    mainForm.Hide();
-                if (form1 != null && form1.Visible)
-                    form1.Hide();
+                if (window1 != null && window1.IsVisible)
+                    window1.Hide();
+                if (window2 != null && window2.IsVisible)
+                    window2.Hide();
             }
 
             /*if (switchedFolder != null)

@@ -5,7 +5,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         xmlns:local="clr-namespace:SolutionsModuleAddInCS"
         mc:Ignorable="d" 
-        Width="400" Height="300">
+        Width="400" Height="300"
+        Top="0"
+        Left="0">
     <Grid>
         <Grid>
             <Grid.RowDefinitions>
